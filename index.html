@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priority Scheduling Algorithm</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>Priority Scheduling Process Scheduler</h1>
+        <form id="schedulerForm">
+            <div>
+                <label for="pname">Process Name:</label>
+                <input type="text" id="pname" required>
+            </div>
+            <div>
+                <label for="arrivalTime">Arrival Time:</label>
+                <input type="number" id="arrivalTime" required>
+            </div>
+            <div>
+                <label for="burstTime">Burst Time:</label>
+                <input type="number" id="burstTime" required>
+            </div>
+            <div>
+                <label for="priority">Priority (lower number = higher priority):</label>
+                <input type="number" id="priority" required>
+            </div>
+            <button id="submit" type="submit">Submit</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let processes = {
+            processName: [],
+            arrivalTime: [],
+            burstTime: [],
+            priority: []
+        };
+
+        document.getElementById("submit").addEventListener("click", function (event) {
+            event.preventDefault();
+            calculatePriorityScheduling();
+        });
+
+        function calculatePriorityScheduling() {
+            let processName = document.getElementById("pname").value;
+            let arrivalTime = parseInt(document.getElementById("arrivalTime").value);
+            let burstTime = parseInt(document.getElementById("burstTime").value);
+            let priority = parseInt(document.getElementById("priority").value);
+            let result = document.getElementById("result");
+
+            if (!processName || isNaN(arrivalTime) || isNaN(burstTime) || isNaN(priority)) {
+                alert("Please enter all fields correctly.");
+                return;
+            }
+
+            // Add new process
+            processes.processName.push(processName);
+            processes.arrivalTime.push(arrivalTime);
+            processes.burstTime.push(burstTime);
+            processes.priority.push(priority);
+
+            let n = processes.processName.length;
+
+            // Initialize metrics
+            let completionTime = new Array(n).fill(0);
+            let turnaroundTime = new Array(n).fill(0);
+            let waitingTime = new Array(n).fill(0);
+
+            let time = 0;
+            let completedProcesses = 0;
+            let isCompleted = new Array(n).fill(false);
+
+            while (completedProcesses < n) {
+                let idx = -1;
+                let minPriority = Number.MAX_VALUE;
+
+                for (let i = 0; i < n; i++) {
+                    if (processes.arrivalTime[i] <= time && !isCompleted[i]) {
+                        if (processes.priority[i] < minPriority) {
+                            minPriority = processes.priority[i];
+                            idx = i;
+                        }
+                    }
+                }
+
+                if (idx !== -1) {
+                    time += processes.burstTime[idx];
+                    completionTime[idx] = time;
+                    isCompleted[idx] = true;
+                    completedProcesses++;
+                } else {
+                    time++;
+                }
+            }
+
+            // Calculate turnaround time and waiting time
+            for (let i = 0; i < n; i++) {
+                turnaroundTime[i] = completionTime[i] - processes.arrivalTime[i];
+                waitingTime[i] = turnaroundTime[i] - processes.burstTime[i];
+            }
+
+            // Calculate averages
+            let totalTurnaroundTime = turnaroundTime.reduce((acc, t) => acc + t, 0);
+            let totalWaitingTime = waitingTime.reduce((acc, w) => acc + w, 0);
+
+            let averageTurnaroundTime = totalTurnaroundTime / n;
+            let averageWaitingTime = totalWaitingTime / n;
+
+            // Display results
+            let output = "<h4>Process Scheduling (Priority Scheduling)</h4>";
+            output += `<table border="1" style="border-collapse: collapse; width: 100%;"><thead><tr>
+                <th>Process Name</th>
+                <th>Arrival Time</th>
+                <th>Burst Time</th>
+                <th>Priority</th>
+                <th>Completion Time</th>
+                <th>Turnaround Time</th>
+                <th>Waiting Time</th>
+              </tr></thead><tbody>`;
+
+            for (let i = 0; i < n; i++) {
+                output += `<tr>
+                    <td>${processes.processName[i]}</td>
+                    <td>${processes.arrivalTime[i]}</td>
+                    <td>${processes.burstTime[i]}</td>
+                    <td>${processes.priority[i]}</td>
+                    <td>${completionTime[i]}</td>
+                    <td>${turnaroundTime[i]}</td>
+                    <td>${waitingTime[i]}</td>
+                  </tr>`;
+            }
+
+            output += `</tbody></table>`;
+            output += `<h3>Average Turnaround Time: ${averageTurnaroundTime.toFixed(2)}</h3>`;
+            output += `<h3>Average Waiting Time: ${averageWaitingTime.toFixed(2)}</h3>`;
+
+            result.innerHTML = output;
+        }
+
+    </script>
+</body>
+
+</html>
